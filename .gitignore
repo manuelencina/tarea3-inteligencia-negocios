@@ -1,2 +1,4 @@
 venv/
 DATA/
+*.csv
+__pycache__
