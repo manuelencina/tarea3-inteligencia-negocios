@@ -2,24 +2,24 @@ import numpy  as np
 
 # Configuration of the SAEs
 def load_config():
-    aux1 = np.loadtxt("cnf_dae.csv")
-    aux2 = np.loadtxt("cnf_softmax.csv")
+    cnf_dae     = np.loadtxt("cnf_dae.csv", delimiter = ",")
+    cnf_softmax = np.loadtxt("cnf_softmax.csv")
 
     class ParamSae:
-        nclasses    = int(aux1[0])
-        nframe      = int(aux1[1])
-        frame_size  = int(aux1[2])
-        p_training  = int(aux1[3])
-        encoder_act = int(aux1[4])
-        max_iter    = int(aux1[5])
-        batch_size  = int(aux1[6])
-        lr          = aux1[7]
-        encoders    = aux1[8:]
+        nclasses    = int(cnf_dae[0])
+        nframe      = int(cnf_dae[1])
+        frame_size  = int(cnf_dae[2])
+        p_training  = cnf_dae[3]
+        encoder_act = int(cnf_dae[4])
+        max_iter    = int(cnf_dae[5])
+        batch_size  = int(cnf_dae[6])
+        lr          = cnf_dae[7]
+        encoders    = cnf_dae[8:]
 
     class ParamSft:
-        max_iter     = int(aux2[0])
-        lr           = aux2[1]
-        batch_size   = int(aux2[2])
+        max_iter     = int(cnf_softmax[0])
+        lr           = cnf_softmax[1]
+        batch_size   = int(cnf_softmax[2])
 
     params_sae = ParamSae()
     params_sft = ParamSft()
@@ -34,9 +34,9 @@ def iniW(next,prev):
     return(w)
     
 # STEP 1: Feed-forward of AE
-def dae_forward(x,...):
-    ...
-    return()    
+# def dae_forward(x,...):
+#     ...
+#     return()    
 
 
 #Activation function
@@ -52,9 +52,9 @@ def gradW(a,w2):
     return(...)        
 
 # Update DAE's weight via mAdam
-def updW_madam():
-        ...    
-    return(...v)
+# def updW_madam():
+#         ...    
+#     return(...v)
 # Update Softmax's weight via mAdam
 def updW_sft_rmsprop(w,v,gw,mu):
     ...    
@@ -73,6 +73,6 @@ def softmax(z):
 
 
 # save weights DL and costo of Softmax
-def save_w_dl(...):    
-    ...
+def save_w_dl():    
+    pass
     
