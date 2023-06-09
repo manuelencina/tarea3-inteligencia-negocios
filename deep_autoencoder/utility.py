@@ -1,29 +1,30 @@
-# My Utility : auxiliars functions
-
-import pandas as pd
 import numpy  as np
 
 # Configuration of the SAEs
-def load_config():      
-    
-    aux1=np.loadtxt('cnf_sae.csv')
-    aux2=np.loadtxt('cnf_softmax.csv')
+def load_config():
+    aux1 = np.loadtxt("cnf_dae.csv")
+    aux2 = np.loadtxt("cnf_softmax.csv")
+
     class ParamSae:
-        pinv=int(aux1[0])
-        actFunc=int(aux1[1])
-        maxIter=int(aux1[2])
-        batchSize=int(aux1[3])
-        lr=aux1[4]
-        nEncoders=aux1[5:]
+        nclasses    = int(aux1[0])
+        nframe      = int(aux1[1])
+        frame_size  = int(aux1[2])
+        p_training  = int(aux1[3])
+        encoder_act = int(aux1[4])
+        max_iter    = int(aux1[5])
+        batch_size  = int(aux1[6])
+        lr          = aux1[7]
+        encoders    = aux1[8:]
 
     class ParamSft:
-        maxIter=int(aux2[0])
-        lr=aux2[1]
-        batchSize=int(aux2[2])
+        max_iter     = int(aux2[0])
+        lr           = aux2[1]
+        batch_size   = int(aux2[2])
 
-    params_sae=ParamSae()
-    params_sft=ParamSft()
-    return(params_sae,params_sft)
+    params_sae = ParamSae()
+    params_sft = ParamSft()
+
+    return (params_sae, params_sft)
 
 # Initialize one-wieght    
 def iniW(next,prev):
