@@ -5,20 +5,36 @@ import utility    as ut
 
 # Training miniBatch 
 def train_sft_batch(x,y,W,V,S,param):
-    costo = []    
-    #for i in range(numBatch):   
-        
-    return(W,V,costo)
+    M=param.batch_size
+    nBatch=int(x.shape[1]/M)
+    batchesX = np.array_split(x.T,nBatch)
+    batchesY = np.array_split(y.T,nBatch)    
+    costo_batches=[]
+    for i in range(nBatch):
+        xe=batchesX[i].T
+        ye=batchesY[i].T 
+        z,a=ut.forward_sft(xe,W)               
+        gW,costo=ut.gradW_softmax(a,ye)
+        costo_batches.append(costo)
+        W,V,S=ut.updW_sft_madam(W,gW,V,S,i,param.lr)
+    return(W,costo_batches)  
 
 # Softmax's training via mAdam
 def train_softmax(x,y,param):
-    W,V,S    = ut.iniW(...)    
-    ...    
-    for Iter in range(1,par1[0]):        
-        idx   = np.random.permutation(x.shape[1])
-        xe,ye = x[:,idx],y[:,idx]         
-        W,V,c = train_sft_batch(xe,ye,W,V,param)
-        ...
+    W        = ut.iniW(y.shape[0],x.shape[0])
+    V        = np.zeros(W.shape) 
+    S = np.zeros(W.shape)
+    costo_prom_iter=[]   
+    for i in range(param.max_iter):        
+        xe,ye     = ut.sort_data_random(x,y)        
+        W,costo = train_sft_batch(xe,ye,W,V,S,param)
+        costo_iter=np.mean(costo)
+        costo_prom_iter.append(costo_iter)
+        if np.mod(i,10)==0:
+            print("costo_softmax(Iter): ",costo_iter) 
+
+               
+    return(W,costo_prom_iter)
                
     #return(W,Costo)    
  
@@ -29,17 +45,19 @@ def train_dae_batch(x,W,param):
     batchesX = np.array_split(x.T,nBatch)
     costo_batches=[]
     V=[]
+    S=[]
     for w in W:
         V.append(np.zeros(w.shape)) 
+        S.append(np.zeros(w.shape))
     for i in range(nBatch):
         xe=batchesX[i].T
-        z,a=ut.dae_forward(xe,W, param)               
-        gW,costo=ut.gradW(a,z,W,v,param)
+        z,a=ut.dae_forward(xe,W, param.encoder_act)               
+        gW,costo=ut.gradW(a,z,W,param)
         costo_batches.append(costo)
-        w,v,vlist=ut.updW_rmsprop(w,v,gW,vlist,param)
+        W,V,S=ut.updW_madam(W,gW,V,S,i,param.lr)
 
 
-    return(w,v,costo_batches)
+    return(W,costo_batches)
 
 # DAE
 def train_dae(x,y,param):       
@@ -47,14 +65,14 @@ def train_dae(x,y,param):
     costo_prom_iter=[]
     for i in range(param.max_iter):       
         xe,ye     = ut.sort_data_random(x,y)            
-        Ws,v,cList = train_dae_batch(xe,Ws,param)
+        Ws,cList = train_dae_batch(xe,Ws,param)
         costo_iter=np.mean(cList)
         costo_prom_iter.append(costo_iter)
         if np.mod(i,10)==0:
-            print("costo(Iter): ",costo_iter) 
-    return(w1) 
-
-
+            print("costo(Iter): ",costo_iter)
+    z,a = ut.dae_forward(x,Ws,param.encoder_act)
+    Xr = a[-1]
+    return(Ws, Xr) 
 
 #load Data for Training
 def load_data_trn():
@@ -63,20 +81,13 @@ def load_data_trn():
 
   return(x_train.T,y_train.T) 
 
-# Configuration of the DAE
-def load_cnf_dae():      
-    par = np.genfromtxt('cnf_dae.csv',delimiter=',')    
-    ...
-    return(...)
-
-
 
 # Beginning ...
 def main():
     p_dae,p_sft = ut.load_config()          
     xe,ye       = load_data_trn()   
-    W,Xr        = train_dae(xe,ye,p_dae)         
-    Ws, cost    = train_softmax(Xr,ye,...)
+    W, Xr       = train_dae(xe,ye,p_dae)         
+    Ws, cost    = train_softmax(Xr,ye,p_sft)
     ut.save_w_dl(W,Ws,cost)
        
 if __name__ == '__main__':   

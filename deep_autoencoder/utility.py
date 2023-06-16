@@ -57,14 +57,14 @@ def sort_data_random(X,Y):
     return X_r,Y_r
 
 
-def dae_forward(xe,w,param):
-    a=[]
+def dae_forward(xe,w,act):
+    a=[xe]
     z=[]
     z.append(np.matmul(w[0],xe))
-    a.append(activation_function(param.encoder_act,z[0]))
+    a.append(activation_function(act,z[0]))
     for i in range(1,len(w)):
         z.append(np.matmul(w[i],a[-1]))
-        a.append(activation_function(param.encoder_act,z[-1]))
+        a.append(activation_function(act,z[-1]))
     return z,a
 # STEP 1: Feed-forward of AE
 # def dae_forward(x,...):
@@ -113,32 +113,69 @@ def activation_function(param, x, deriv=None):
     else:
         return derivatives[param](x) 
 # STEP 2: Feed-Backward for DAE
-def gradW(a,w2):   
+def gradW(a,z,w,param):   
+    e       = a[-1]-a[0]
+    Cost    = np.sum(np.sum(e**2))/(2*e.shape[1])
+    gW=[]
+    aux_w = w.copy()
+    aux_w.reverse()
+    aux_a = a.copy()
+    aux_a.reverse()
+    aux_z = z.copy()
+    aux_z.reverse()
+    delta=e*activation_function(param.encoder_act,z[-1],True)
+    gW.append(np.matmul(delta,a[-2].T))
+    for i in range(1,len(aux_a)-1):
+        delta=np.matmul(aux_w[i-1].T,delta)*activation_function(param.encoder_act,aux_z[i],True)
+        gW.append(delta@aux_a[i+1].T)
 
-    return()        
+    return(gW,Cost)           
 
 # Update DAE's weight via mAdam
-# def updW_madam():
-#         ...    
-#     return(...v)
+def updW_madam(W,gW,V,S,t,mu):
+    beta1 = 0.9
+    beta2 = 0.999
+    eps = 1e-8
+    gW.reverse()
+    for i in range(len(gW)):
+        V[i] = beta1*V[i] + (1-beta1)*gW[i]
+        S[i] = beta2*S[i] + (1-beta2)*(gW[i]**2)
+        gAdam = np.sqrt(1-(beta2**t))/(1-(beta1**t) +0.000000000000000000001)
+        gAdam = gAdam*(V[i]/(np.sqrt(S[i])+ eps) )
+        W[i] = W[i] - mu*gAdam
+    return W,V,S
 # Update Softmax's weight via mAdam
-def updW_sft_rmsprop(w,v,gw,mu):
-    ...    
-    return(w,v)
+def updW_sft_madam(W,gW,V,S,t,mu):
+    beta1 = 0.9
+    beta2 = 0.999
+    eps = 1e-8
+    V = beta1*V + (1-beta1)*gW
+    S = beta2*S + (1-beta2)*(gW**2)
+    gAdam = np.sqrt(1-(beta2**t))/(1-(beta1**t) +0.000000000000000000001)
+    gAdam = gAdam*(V/(np.sqrt(S)+ eps) )
+    W = W - mu*gAdam
+    return W,V,S
 
 # Softmax's gradient
-def gradW_softmax(x,y,a):        
-    ya   = y*np.log(a)
-    ...    
-    return(gW,Cost)
+def gradW_softmax(a,y):
+    costo=(-1/y.shape[1])*np.sum(y * np.log(a[1]))       
+    gW=-(1/y.shape[1])*((y-a[1])@a[0].T)    
+    return(gW,costo)
 
 # Calculate Softmax
 def softmax(z):
         exp_z = np.exp(z-np.max(z))
         return(exp_z/exp_z.sum(axis=0,keepdims=True))
 
+def forward_sft(x,w):
+    z=w@x
+    a=softmax(z)
+    aoutput=[x,a]
+    return z,aoutput
 
-# save weights DL and costo of Softmax
-def save_w_dl():    
-    pass
+# save weights SAE and costo of Softmax
+def save_w_dl(W,Ws,cost):    
+    np.savetxt('costo.csv', np.array(cost).T, delimiter=',')
+    W.append(Ws)
+    np.savez("wdae.npz", *W)
     
