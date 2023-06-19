@@ -65,11 +65,7 @@ def dae_forward(xe,w,act):
     for i in range(1,len(w)):
         z.append(np.matmul(w[i],a[-1]))
         a.append(activation_function(act,z[-1]))
-    return z,a
-# STEP 1: Feed-forward of AE
-# def dae_forward(x,...):
-#     ...
-#     return()    
+    return z,a  
 
 
 #Activation function
@@ -178,4 +174,70 @@ def save_w_dl(W,Ws,cost):
     np.savetxt('costo.csv', np.array(cost).T, delimiter=',')
     W.append(Ws)
     np.savez("wdae.npz", *W)
+
+#Confusion matrix
+def confusion_matrix(y_true, y_pred):
+	m, N = y_true.shape
+	cm = np.zeros((m, m), dtype=int)
+	for i in range(m):
+		for j in range(m):
+			for n in range(N):
+				if y_pred[j, n] == 1 and y_true[i, n] == 1:
+					cm[i, j] += 1
+	return cm
+
+#Funcion encargada de calcular la presición 
+def precision(i, cm):
+	suma = np.sum(cm[i])
+
+	if (suma > 0):
+		prec = cm[i][i] / suma
+	else:
+		prec = 0
     
+	return prec
+
+#Funcion encargada de calcular el recall
+def recall(j, cm):
+	suma = np.sum(cm[:, j])
+    
+	if (suma > 0):
+		rec = cm[j][j] / suma
+	else: 
+		rec = 0
+    
+	return rec
+
+#Para calcular el fscore
+def fscore(j, cm):
+	numerator = precision(j, cm) * recall(j, cm)
+	denominator = precision(j, cm) + recall(j, cm)
+
+	if 0 == denominator:
+		return 0
+  
+	fscore = 2 * (numerator / denominator) 
+	return fscore
+  
+# Returns confusion matrix and fscore
+def metricas(y_true, y_pred):
+
+	# Esto es para que el valor de clase con más peso quede con un 1, se repite el proceso para cada muestra
+	for sample in y_pred.T:
+		max_value_i = np.argmax(sample)
+		sample[max_value_i] = 1
+	
+	# Esto es para que los demás valores de clase que no son 1 sean aproximados a 0
+	y_pred = y_pred.astype(int)
+
+	cm = confusion_matrix(y_true, y_pred)
+
+	k = cm.shape[0]
+	fscore_result = [0] * (k + 1)
+
+	for j in range(k):
+		fscore_result[j] = fscore(j, cm)
+
+	fscore_result[k] = np.mean(fscore_result[:-1])
+
+	return cm, fscore_result
