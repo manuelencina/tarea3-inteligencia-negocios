@@ -4,7 +4,6 @@ import utility    as ut
 # normalize data 
 def data_norm(X):
   
-  X= X.T
   for i in range(0, len(X)):
      
      max_value = max(X[i])
@@ -13,7 +12,6 @@ def data_norm(X):
      if diff != 0:
       X[i] = normalize_vector(X[i])
 
-  X= X.T
   return X
 
 #Esta funcion normaliza un vector cualquiera para que sus valores estén en el rango de 0,99 y 0,01
@@ -94,7 +92,7 @@ def main():
   data            = load_class_csv(sae_params.nclasses)
   X, Y            = create_input_label(data, sae_params)
   X_norm = data_norm(X)
-  save_data_csv(X, Y, sae_params)
+  save_data_csv(X_norm, Y, sae_params)
     
 
 if __name__ == '__main__': 
