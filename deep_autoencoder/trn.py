@@ -31,7 +31,7 @@ def train_softmax(x,y,param):
         costo_iter=np.mean(costo)
         costo_prom_iter.append(costo_iter)
         if np.mod(i,10)==0:
-            print("costo_softmax(Iter): ",costo_iter) 
+            print("costo_softmax(Iter ",i,"): ",costo_iter) 
 
                
     return(W,costo_prom_iter)
@@ -69,7 +69,7 @@ def train_dae(x,y,param):
         costo_iter=np.mean(cList)
         costo_prom_iter.append(costo_iter)
         if np.mod(i,10)==0:
-            print("costo(Iter): ",costo_iter)
+            print("costo(Iter: ",i,"): ",costo_iter)
     z,a = ut.dae_forward(x,Ws,param.encoder_act)
     Xr = a[-1]
     return(Ws, Xr) 
