@@ -65,7 +65,7 @@ def dae_forward(xe,w,act):
     for i in range(1,len(w)):
         z.append(np.matmul(w[i],a[-1]))
         a.append(activation_function(act,z[-1]))
-    return z,a  
+    return z,a
 
 
 #Activation function
@@ -119,10 +119,10 @@ def gradW(a,z,w,param):
     aux_a.reverse()
     aux_z = z.copy()
     aux_z.reverse()
-    delta=e*activation_function(param.encoder_act,z[-1],True)
+    delta=e*activation_function(param.encoder_act,z[-1],1)
     gW.append(np.matmul(delta,a[-2].T))
     for i in range(1,len(aux_a)-1):
-        delta=np.matmul(aux_w[i-1].T,delta)*activation_function(param.encoder_act,aux_z[i],True)
+        delta=np.matmul(aux_w[i-1].T,delta)*activation_function(param.encoder_act,aux_z[i],1)
         gW.append(delta@aux_a[i+1].T)
 
     return(gW,Cost)           
@@ -133,11 +133,12 @@ def updW_madam(W,gW,V,S,t,mu):
     beta2 = 0.999
     eps = 1e-8
     gW.reverse()
-    for i in range(len(gW)):
+    t=t+1
+    for i in range(len(W)):
         V[i] = beta1*V[i] + (1-beta1)*gW[i]
         S[i] = beta2*S[i] + (1-beta2)*(gW[i]**2)
-        gAdam = np.sqrt(1-(beta2**t))/(1-(beta1**t) +0.000000000000000000001)
-        gAdam = gAdam*(V[i]/(np.sqrt(S[i])+ eps) )
+        gAdam =  np.sqrt(1-(beta2**t))/(1-(beta1**(t)))
+        gAdam = gAdam*(V[i]/(np.sqrt(S[i])+ eps))
         W[i] = W[i] - mu*gAdam
     return W,V,S
 # Update Softmax's weight via mAdam
@@ -145,9 +146,10 @@ def updW_sft_madam(W,gW,V,S,t,mu):
     beta1 = 0.9
     beta2 = 0.999
     eps = 1e-8
+    t=t+1
     V = beta1*V + (1-beta1)*gW
     S = beta2*S + (1-beta2)*(gW**2)
-    gAdam = np.sqrt(1-(beta2**t))/(1-(beta1**t) +0.000000000000000000001)
+    gAdam = np.sqrt(1-(beta2**t))/(1-(beta1**t))
     gAdam = gAdam*(V/(np.sqrt(S)+ eps) )
     W = W - mu*gAdam
     return W,V,S

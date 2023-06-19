@@ -39,16 +39,11 @@ def train_softmax(x,y,param):
     #return(W,Costo)    
  
 # Training by using miniBatch
-def train_dae_batch(x,W,param):
+def train_dae_batch(x,W,param,V,S):
     M=param.batch_size
     nBatch=int(x.shape[1]/M)
     batchesX = np.array_split(x.T,nBatch)
     costo_batches=[]
-    V=[]
-    S=[]
-    for w in W:
-        V.append(np.zeros(w.shape)) 
-        S.append(np.zeros(w.shape))
     for i in range(nBatch):
         xe=batchesX[i].T
         z,a=ut.dae_forward(xe,W, param.encoder_act)               
@@ -57,15 +52,20 @@ def train_dae_batch(x,W,param):
         W,V,S=ut.updW_madam(W,gW,V,S,i,param.lr)
 
 
-    return(W,costo_batches)
+    return(W,costo_batches,V,S)
 
 # DAE
 def train_dae(x,y,param):       
     Ws=ut.iniWs(x,param.encoders)
     costo_prom_iter=[]
-    for i in range(param.max_iter):       
+    V=[]
+    S=[]
+    for w in Ws:
+        V.append(np.zeros(w.shape)) 
+        S.append(np.zeros(w.shape))    
+    for i in range(param.max_iter):
         xe,ye     = ut.sort_data_random(x,y)            
-        Ws,cList = train_dae_batch(xe,Ws,param)
+        Ws,cList,V,S= train_dae_batch(xe,Ws,param,V,S)
         costo_iter=np.mean(cList)
         costo_prom_iter.append(costo_iter)
         if np.mod(i,10)==0:
