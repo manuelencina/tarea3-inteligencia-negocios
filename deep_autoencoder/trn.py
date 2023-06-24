@@ -64,15 +64,16 @@ def train_dae(x,y,param):
         V.append(np.zeros(w.shape)) 
         S.append(np.zeros(w.shape))    
     for i in range(param.max_iter):
-        xe,ye     = ut.sort_data_random(x,y)            
+        xe,ye     = ut.sort_data_random(x,y)        
         Ws,cList,V,S= train_dae_batch(xe,Ws,param,V,S)
         costo_iter=np.mean(cList)
         costo_prom_iter.append(costo_iter)
         if np.mod(i,10)==0:
             print("costo(Iter: ",i,"): ",costo_iter)
-    z,a = ut.dae_forward(x,Ws,param.encoder_act)
+
+    z,a = ut.dae_forward(x,Ws[:len(param.encoders)],param.encoder_act)
     Xr = a[-1]
-    return(Ws, Xr) 
+    return(Ws[:len(param.encoders)], Xr)
 
 #load Data for Training
 def load_data_trn():
@@ -86,7 +87,8 @@ def load_data_trn():
 def main():
     p_dae,p_sft = ut.load_config()          
     xe,ye       = load_data_trn()   
-    W, Xr       = train_dae(xe,ye,p_dae)         
+    W, Xr       = train_dae(xe,ye,p_dae)
+    print(xe.shape, Xr.shape)   
     Ws, cost    = train_softmax(Xr,ye,p_sft)
     ut.save_w_dl(W,Ws,cost)
        
